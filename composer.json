@@ -1,0 +1,36 @@
+{
+    "name": "jinn/jinn-laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Shevchenko",
+            "email": "caezaris@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../jinn-core"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Jinn\\Laravel\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jinn\\Laravel\\JinnServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php" : "^7.4|8.0",
+        "laravel/framework": "^8.54",
+        "jinn/jinn-core": "dev-master",
+        "nette/php-generator": "v3.6.x-dev"
+    }
+}
