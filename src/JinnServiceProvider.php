@@ -18,4 +18,13 @@ class JinnServiceProvider extends ServiceProvider
             ]);
         }
     }
+
+    public function register()
+    {
+        $this->app->singleton(JinnMigrator::class, function($app) {
+            $repository = $app['migration.repository'];
+
+            return new JinnMigrator($repository, $app['db'], $app['files'], $app['events']);
+        });
+    }
 }

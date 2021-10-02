@@ -4,6 +4,7 @@
 namespace Jinn\Laravel;
 
 
+use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Str;
 use Jinn\AbstractEntityGenerator;
 use Jinn\Models\Entity;
@@ -18,7 +19,11 @@ class JinnEntityGenerator extends AbstractEntityGenerator
     private string $modelsNamespace;
     private string $generatedNamespace;
     private string $generatedFolder;
-    private string $databasePath;
+    private string $migrationsPath;
+    /**
+     * @var OutputStyle
+     */
+    private OutputStyle $output;
 
     public function __construct()
     {
@@ -27,13 +32,23 @@ class JinnEntityGenerator extends AbstractEntityGenerator
         $this->generatedNamespace = config('jinn.generated_namespace');
     }
 
-    public function setBase($baseFolder, $appFolder, $appNamespace, $databasePath) {
-        if (!$baseFolder || !$appFolder || !$appNamespace || !$databasePath) throw new \InvalidArgumentException('Folders and namespace are required');
+    public function setBase($baseFolder, $appFolder, $appNamespace, $migrationsPath) {
+        if (!$baseFolder || !$appFolder || !$appNamespace || !$migrationsPath) throw new \InvalidArgumentException('Folders and namespace are required');
 
         $this->baseFolder = $baseFolder;
         $this->appFolder = $appFolder;
         $this->appNamespace = $appNamespace;
-        $this->databasePath = $databasePath;
+        $this->migrationsPath = $migrationsPath;
+    }
+
+    public function setOutput(OutputStyle $output)
+    {
+        $this->output = $output;
+    }
+
+    protected function writeLine(string $line)
+    {
+        if ($this->output) $this->output->writeln($line);
     }
 
     private function name(...$parts) {
@@ -100,6 +115,7 @@ class JinnEntityGenerator extends AbstractEntityGenerator
             $method->setBody($code);
         }
         JinnFileWriter::writePhpFile($this->nameToPath($this->generatedFolder, $this->generatedNamespace, $genFullName), $genFile);
+        $this->writeLine("Generated class\t<info>$genName</info>");
 
         $modelFilename = $this->nameToPath($this->appFolder, $this->appNamespace, $this->name($modelNamespace, $entity->name));
         if (!file_exists($modelFilename)) {
@@ -110,19 +126,27 @@ class JinnEntityGenerator extends AbstractEntityGenerator
             $modelClass->setExtends($genFullName);
 
             JinnFileWriter::writePhpFile($modelFilename, $modelFile);
+            $this->writeLine("Generated class\t<info>{$entity->name}</info>");
+        } else {
+            $this->writeLine("Skipped class\t<info>{$entity->name}</info>");
         }
     }
 
+    /**
+     * @param array $entities
+     * @throws \Doctrine\DBAL\Exception
+     */
     protected function generateMigrations(array $entities): void
     {
-        $migrationsPath = $this->databasePath . '/migrations/';
         $creator = new JinnMigrationCreator();
 
         foreach ($entities as $entity) {
-            $creator->createTableMigration($entity, $migrationsPath);
+            $filename = $creator->createStructureMigration($entity, $this->migrationsPath);
+            if ($filename) $this->writeLine("Generated migration <info>$filename</info>");
+
         }
         foreach ($entities as $entity) {
-            $creator->createForeignKeysMigration($entity, $migrationsPath);
+            //$creator->createForeignKeysMigration($entity, $migrationsPath);
         }
     }
 }
