@@ -1,12 +1,12 @@
 <?php
 
-
 namespace Jinn\Laravel;
 
 use Illuminate\Console\Command;
-use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Composer;
-use Jinn\JinnDefinitionReader;
+use Jinn\Definition\DefinitionReader;
+use Jinn\Laravel\Generator\Migrator;
+use Jinn\Laravel\Generator\ModelGenerator;
 
 class JinnGenerateCommand extends Command
 {
@@ -18,7 +18,7 @@ class JinnGenerateCommand extends Command
         parent::__construct();
     }
 
-    public function handle(JinnMigrator $migrator, JinnDefinitionReader $reader, JinnEntityGenerator $generator, Composer $composer)
+    public function handle(Migrator $migrator, DefinitionReader $reader, ModelGenerator $generator, Composer $composer)
     {
         $migrationsPath = $this->laravel->databasePath() . '/migrations/';
 

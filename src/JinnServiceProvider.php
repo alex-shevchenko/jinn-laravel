@@ -3,6 +3,7 @@
 namespace Jinn\Laravel;
 
 use Illuminate\Support\ServiceProvider;
+use Jinn\Laravel\Generator\Migrator;
 
 class JinnServiceProvider extends ServiceProvider
 {
@@ -21,10 +22,10 @@ class JinnServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->app->singleton(JinnMigrator::class, function($app) {
+        $this->app->singleton(Migrator::class, function($app) {
             $repository = $app['migration.repository'];
 
-            return new JinnMigrator($repository, $app['db'], $app['files'], $app['events']);
+            return new Migrator($repository, $app['db'], $app['files'], $app['events']);
         });
     }
 }
