@@ -18,7 +18,7 @@ class JinnGenerateCommand extends Command
         parent::__construct();
     }
 
-    public function handle(Migrator $migrator, DefinitionReader $reader, ModelGenerator $generator, Composer $composer)
+    public function handle(Migrator $migrator, DefinitionReader $reader, Composer $composer)
     {
         $migrationsPath = $this->laravel->databasePath() . '/migrations/';
 
@@ -32,16 +32,17 @@ class JinnGenerateCommand extends Command
 
         $this->line('<comment>Generating</comment>');
 
-        $entities = $reader->read($this->laravel->basePath() . '/' . config('jinn.definitions_folder'));
-        $generator->setBase(
-            $this->laravel->basePath(),
-            $this->laravel['path'],
-            substr($this->laravel->getNamespace(), 0, -1),
-            $migrationsPath
-        );
+        $application = $reader->read($this->laravel->basePath() . '/' . config('jinn.definitions_folder'));
 
-        $generator->setOutput($this->getOutput());
-        $generator->generateEntities($entities->entities());
+        $generatorParams = [
+            'baseFolder' => $this->laravel->basePath(),
+            'appFolder' => $this->laravel['path'],
+            'appNamespace' => substr($this->laravel->getNamespace(), 0, -1),
+            'migrationsPath' => $migrationsPath
+        ];
+        $generator = new ModelGenerator($generatorParams, $this->getOutput());
+
+        $generator->generate($application);
 
         $this->line('<info>Jinn done</info>');
         $this->line('<info>Executing migrations</info>');

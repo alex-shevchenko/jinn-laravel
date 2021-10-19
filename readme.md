@@ -30,7 +30,7 @@ In case if your definition includes APIs, when first executed
 Jinn will generate API routing file under `jinn/gen/routes/api.php`.
 The file must be required from the main `routes/api.php` as follows
 ```php
-$jinn = require('../jinn/gen/routes/api.php');
+$jinn = require(base_path() . '/jinn/gen/routes/api.php');
 Route::group($jinn);
 ```
 Here you may add any middleware to the group as follows

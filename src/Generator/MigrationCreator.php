@@ -229,12 +229,8 @@ class MigrationCreator extends BaseMigrationCreator
      */
     protected function createIndexesMigration(Entity $entity, bool $newTable, string &$upCode, string &$downCode): bool
     {
-        if (!$newTable) {
-            $changes = $this->databaseComparer->compareTableIndexes($entity);
-            if (!$changes) return false;
-        } else {
-            $changes = array_map(function (Index $index) { return new IndexDiff($index); }, $entity->indexes());
-        }
+        $changes = $this->databaseComparer->compareTableIndexes($entity);
+        if (!$changes) return false;
 
         foreach ($changes as $diff) {
             $create1 = null;
@@ -276,7 +272,7 @@ class MigrationCreator extends BaseMigrationCreator
 
         $changed = $this->createColumnsMigration($entity, $newTable, $upCode, $downCode);
 
-        $changed = $changed || $this->createIndexesMigration($entity, $newTable, $upCode, $downCode);
+        $changed = $this->createIndexesMigration($entity, $newTable, $upCode, $downCode) || $changed;
 
         $upCode .= '});';
         if (!$newTable)
@@ -313,6 +309,10 @@ class MigrationCreator extends BaseMigrationCreator
             if ($diff->operation != IndexDiff::OP_ADD) {
                 list($create1, $drop1) = $this->foreignKeyCode($entity, $diff->foreignKey);
                 $upCode .= $drop1;
+                if ($diff->index) {
+                    list(, $indDrop) = $this->indexCode($diff->index);
+                    $upCode .= $indDrop;
+                }
             }
             if ($diff->operation != IndexDiff::OP_REMOVE) {
                 list($create2, $drop2) = $this->foreignKeyCode($entity, $diff->relation);

@@ -20,11 +20,15 @@ class NameConverter implements NameConverterInterface
 
     public function toColumnName(string $fieldName): string
     {
+//        return $fieldName;
         return Str::snake($fieldName);
     }
 
     public function toFieldName(string $columnName): string
     {
-        return Str::camel($columnName);
+//        return $columnName;
+//        return Str::camel($columnName);
+        return Str::snake($columnName);
+
     }
 }
