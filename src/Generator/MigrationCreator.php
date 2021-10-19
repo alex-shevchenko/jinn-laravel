@@ -90,7 +90,8 @@ class MigrationCreator extends BaseMigrationCreator
         if ($column instanceof Field) {
             $typeName = $column->type;
             $columnName = $this->nameConverter->toColumnName($column->name);
-            $length = $column->length ?? Types::defaultLength($column->type);
+            $length = $column->length;
+            if (!$length) $length = Types::defaultLength($column->type);
             $required = $column->required;
             $default = $column->default;
         } elseif ($column instanceof Column) {
