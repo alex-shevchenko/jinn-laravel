@@ -4,7 +4,6 @@
 namespace Jinn\Laravel\Generator;
 
 
-use App\Models\Product;
 use Doctrine\DBAL\Exception as DBALException;
 use Jinn\Definition\Models\ApiController;
 use Illuminate\Console\OutputStyle;
@@ -31,6 +30,7 @@ class ModelGenerator extends AbstractModelGenerator
     private string $policiesNamespace;
     private string $generatedNamespace;
     private string $apiResourcesNamespace;
+    private string $apiRequestsNamespace;
     private string $apiControllersNamespace;
     private string $generatedFolder;
     private string $migrationsPath;
@@ -47,6 +47,7 @@ class ModelGenerator extends AbstractModelGenerator
         $this->generatedFolder = config('jinn.generated_folder');
         $this->generatedNamespace = config('jinn.generated_namespace');
         $this->apiResourcesNamespace = config('jinn.api_resources_namespace');
+        $this->apiRequestsNamespace = config('jinn.api_requests_namespace');
         $this->apiControllersNamespace = config('jinn.api_controllers_namespace');
 
         $this->baseFolder = $params['baseFolder'];
@@ -70,6 +71,10 @@ class ModelGenerator extends AbstractModelGenerator
     private function nameToPath($baseFolder, $baseNamespace, $name) {
         $name = str_replace($baseNamespace, $baseFolder, $name);
         return str_replace('\\', '/', $name) . '.php';
+    }
+
+    private function modelClass($name) {
+        return $this->name($this->appNamespace, $this->modelsNamespace, $name);
     }
 
     private function generateClass(string $name, string $namespace, callable $classGenerator)
@@ -119,6 +124,9 @@ class ModelGenerator extends AbstractModelGenerator
                 foreach ($entity->traits as $trait) {
                     $genClass->addTrait($trait);
                 }
+
+                $guardedProperty = $genClass->addProperty('guarded', []);
+                $guardedProperty->setProtected();
 
                 $defaults = [];
                 foreach ($entity->fields() as $field) {
@@ -205,6 +213,59 @@ class ModelGenerator extends AbstractModelGenerator
         $this->writeLine("Generated file\t<info>routes/api.php</info>");
     }
 
+    protected function generateApiRequest(ApiController $apiController, ApiMethod $apiMethod)
+    {
+        $className = $apiController->name() . Str::ucfirst($apiMethod->name) . 'Request';
+        $entity = $apiController->entity;
+
+        $this->generateClass($className, $this->apiRequestsNamespace,
+            function(ClassType $genClass, $namespace) use ($apiMethod, $entity) {
+                $genClass->setExtends('Illuminate\Foundation\Http\FormRequest');
+
+                $rules = $genClass->addMethod('rules');
+
+                $body = "return [\n";
+
+                foreach ($apiMethod->fields as $name) {
+                    $validations = [];
+
+                    if ($apiMethod->type == ApiMethod::UPDATE) {
+                        $validations[] = 'sometimes';
+                    }
+
+                    $field = $entity->field($name);
+
+                    if ($field->required) {
+                        $validations[] = 'required';
+                    }
+                    $typeValidation = Types::toValidation($field->type);
+                    if ($typeValidation) $validations[] = $typeValidation;
+
+                    if ($field->type == 'string') {
+                        $length = $field->length;
+                        if (!$length) $length = Types::defaultLength($field->type);
+                        $validations[] = 'max:' . $length;
+                    }
+
+                    if ($entity->hasIndex($name)) {
+                        $index = $entity->index($name);
+                        if ($index->isUnique && count($index->columns) == 1 && $index->columns[0] == $name) {
+                            $modelClass = $this->modelClass($entity->name);
+                            $validations[] = 'unique:' . $modelClass;
+                        }
+                    }
+
+                    $body .= "\t'{$name}' => " . $this->dumper->dump($validations) . ",\n";
+                }
+
+                $body .= "];";
+                $rules->setBody($body);
+            }
+        );
+
+        return $this->name($this->appNamespace, $this->apiRequestsNamespace, $className);
+    }
+
     protected function generateApiController(ApiController $apiController): string
     {
         $routes = '';
@@ -213,22 +274,35 @@ class ModelGenerator extends AbstractModelGenerator
 
         $this->generateClass($apiController->name() . 'Controller', $this->apiControllersNamespace,
             function(ClassType $genClass, $namespace) use ($apiController, &$routes, &$policies) {
-                $modelClass = $this->name($this->appNamespace, $this->modelsNamespace, $apiController->name());
+                $modelClass = $this->modelClass($apiController->name());
+                $entityParamName = Str::camel($apiController->name());
 
                 $routesRoot = Str::plural(Str::snake($apiController->name()));
 
                 $genClass->setExtends('App\Http\Controllers\Controller');
 
+                $fill = $genClass->addMethod('fill');
+                $param = $fill->addParameter($entityParamName);
+                $param->setType($modelClass);
+                $param = $fill->addParameter('data');
+                $param->setType('array');
+                $fill->setProtected();
+                $fill->setBody("\${$entityParamName}->fill(\$data);");
+
                 foreach ($apiController->methods() as $apiMethod) {
                     $method = $genClass->addMethod($apiMethod->name);
 
                     $param = $method->addParameter('request');
-                    $param->setType('Illuminate\Http\Request');
+
+                    if ($apiMethod->type == ApiMethod::CREATE || $apiMethod->type == ApiMethod::UPDATE) {
+                        $requestClass = $this->generateApiRequest($apiController, $apiMethod);
+                        $param->setType($requestClass);
+                    } else {
+                        $param->setType('Illuminate\Http\Request');
+                    }
 
                     $entityRoute = '';
-                    $entityParamName = '';
                     if (!in_array($apiMethod->type, [ApiMethod::LIST, ApiMethod::CREATE]) || $apiMethod->relation) {
-                        $entityParamName = Str::camel($apiController->name());
                         $entityRoute = '/{' . $entityParamName . '}';
 
                         $param = $method->addParameter($entityParamName);
@@ -239,7 +313,7 @@ class ModelGenerator extends AbstractModelGenerator
                     if ($apiMethod->policy) {
                         $policies[] = $apiMethod->policy;
                         $body .= "\$this->authorize('{$apiMethod->name}', " .
-                            ($entityParamName ? "\$$entityParamName" : "\\$modelClass::class") . ");\n";
+                            ($entityRoute ? "\$$entityParamName" : "\\$modelClass::class") . ");\n";
                     }
 
                     $route = $routesRoot;
@@ -270,11 +344,13 @@ class ModelGenerator extends AbstractModelGenerator
                             $routeMethod = 'get';
                             break;
                         case ApiMethod::CREATE:
-                            $body .= "\\$modelClass::create(\$request->all());\n";
+                            $body .= "\${$entityParamName} = new \\$modelClass();\n\$this->fill(\${$entityParamName}, \$request->validated());\n";
+                            $body .= "\${$entityParamName}->save();\nreturn \${$entityParamName};";
                             $routeMethod = 'post';
                             break;
                         case ApiMethod::UPDATE:
-                            $body .= "\${$entityParamName}->update(\$request->all());\n";
+                            $body .= "\$this->fill(\${$entityParamName}, \$request->validated());\n";
+                            $body .= "\${$entityParamName}->save();\nreturn \${$entityParamName};";
                             $routeMethod = 'put';
                             break;
                         case ApiMethod::DELETE:
@@ -292,7 +368,9 @@ class ModelGenerator extends AbstractModelGenerator
 
                     $method->setBody($body);
 
-                    $routes .= "\tRoute::$routeMethod('$route', [\\" . $this->name($namespace, $apiController->name() . 'Controller') . "::class, '{$apiMethod->name}']);\n";
+                    if ($apiMethod->route !== false) {
+                        $routes .= "\tRoute::$routeMethod('$route', [\\" . $this->name($namespace, $apiController->name() . 'Controller') . "::class, '{$apiMethod->name}']);\n";
+                    }
                 }
             }
         );
