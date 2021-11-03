@@ -8,5 +8,6 @@ return [
     'api_controllers_namespace' => 'Http\Controllers\Api',
     'api_requests_namespace' => 'Http\Requests\Api',
     'api_resources_namespace' => 'Http\Resources\Api',
-    'generated_namespace' => 'JinnGenerated'
+    'generated_namespace' => 'JinnGenerated',
+    'auth_middleware' => 'auth'
 ];

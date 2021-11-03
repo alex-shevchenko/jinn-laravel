@@ -34,6 +34,7 @@ class ModelGenerator extends AbstractModelGenerator
     private string $apiControllersNamespace;
     private string $generatedFolder;
     private string $migrationsPath;
+    private string $authMiddleware;
     /**
      * @var OutputStyle
      */
@@ -49,6 +50,7 @@ class ModelGenerator extends AbstractModelGenerator
         $this->apiResourcesNamespace = config('jinn.api_resources_namespace');
         $this->apiRequestsNamespace = config('jinn.api_requests_namespace');
         $this->apiControllersNamespace = config('jinn.api_controllers_namespace');
+        $this->authMiddleware = config('jinn.auth_middleware');
 
         $this->baseFolder = $params['baseFolder'];
         $this->appFolder = $params['appFolder'];
@@ -266,6 +268,32 @@ class ModelGenerator extends AbstractModelGenerator
         return $this->name($this->appNamespace, $this->apiRequestsNamespace, $className);
     }
 
+    protected function generateApiResource(ApiController $apiController, ApiMethod $apiMethod) {
+        $className = $apiController->name() . Str::ucfirst($apiMethod->name) . 'Resource';
+        $entity = $apiController->entity;
+
+        $this->generateClass($className, $this->apiResourcesNamespace,
+            function(ClassType $genClass, $namespace) use ($apiMethod, $entity) {
+                $genClass->setExtends('Illuminate\Http\Resources\Json\JsonResource');
+
+                $genMethod = $genClass->addMethod('toArray');
+
+                $genMethod->addParameter('request');
+
+                $body = "return [\n";
+
+                foreach ($apiMethod->fields as $name) {
+                    $body .= "\t'$name' => \$this->$name,\n";
+                }
+
+                $body .= "];";
+                $genMethod->setBody($body);
+            }
+        );
+
+        return $this->name($this->appNamespace, $this->apiResourcesNamespace, $className);
+    }
+
     protected function generateApiController(ApiController $apiController): string
     {
         $routes = '';
@@ -299,6 +327,10 @@ class ModelGenerator extends AbstractModelGenerator
                         $param->setType($requestClass);
                     } else {
                         $param->setType('Illuminate\Http\Request');
+                    }
+
+                    if (in_array($apiMethod->type, [ApiMethod::LIST, ApiMethod::GET]) && $apiMethod->fields) {
+                        $resourceClass = $this->generateApiResource($apiController, $apiMethod);
                     }
 
                     $entityRoute = '';
@@ -336,11 +368,11 @@ class ModelGenerator extends AbstractModelGenerator
                                 $queryMethod->addParameter($entityParamName);
                             }
 
-                            $body .= "return \$this->{$queryMethodName}($queryMethodParameters)->get();\n";
+                            $body .= "return \\$resourceClass::collection(\$this->{$queryMethodName}($queryMethodParameters)->get());\n";
                             $routeMethod = 'get';
                             break;
                         case ApiMethod::GET:
-                            $body .= "return \$$entityParamName;\n";
+                            $body .= "return new \\$resourceClass(\$$entityParamName);\n";
                             $routeMethod = 'get';
                             break;
                         case ApiMethod::CREATE:
@@ -369,7 +401,10 @@ class ModelGenerator extends AbstractModelGenerator
                     $method->setBody($body);
 
                     if ($apiMethod->route !== false) {
-                        $routes .= "\tRoute::$routeMethod('$route', [\\" . $this->name($namespace, $apiController->name() . 'Controller') . "::class, '{$apiMethod->name}']);\n";
+                        $routes .= "\tRoute::$routeMethod('$route', [\\" . $this->name($namespace, $apiController->name() . 'Controller') . "::class, '{$apiMethod->name}'])";
+                        if ($apiMethod->authRequired)
+                            $routes .= "->middleware('{$this->authMiddleware}')";
+                        $routes .= ";\n";
                     }
                 }
             }
@@ -379,17 +414,6 @@ class ModelGenerator extends AbstractModelGenerator
             $this->generatePolicy($apiController->entity, $policies);
 
         return $routes;
-
-//        $this->generateClass($apiController->name() . 'Resource', $this->apiResourcesNamespace,
-//            function(ClassType $genClass, $namespace) use ($apiController) {
-//                $genClass->setExtends('Illuminate\Http\Resources\Json\JsonResource');
-//
-//                $method = $genClass->addMethod('toArray');
-//                $method->addParameter('request');
-//
-//                $body = "return [\n";
-//            }
-//        );
     }
 
     /**
