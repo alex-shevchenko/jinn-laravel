@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Jinn\Definition\Models\ApiMethod;
 use Jinn\Definition\Models\Application;
 use Jinn\Definition\Models\Policy;
+use Jinn\Definition\Models\View;
 use Jinn\Generator\AbstractModelGenerator;
 use Jinn\Definition\Models\Entity;
 use Jinn\Definition\Models\Relation;
@@ -40,6 +41,8 @@ class ModelGenerator extends AbstractModelGenerator
      */
     private OutputStyle $output;
     private Dumper $dumper;
+
+    private array $views;
 
     public function __construct(array $params, ?OutputStyle $output = null)
     {
@@ -228,7 +231,7 @@ class ModelGenerator extends AbstractModelGenerator
 
                 $body = "return [\n";
 
-                foreach ($apiMethod->fields as $name) {
+                foreach ($apiMethod->view->fields as $name) {
                     $validations = [];
 
                     if ($apiMethod->type == ApiMethod::UPDATE) {
@@ -268,12 +271,11 @@ class ModelGenerator extends AbstractModelGenerator
         return $this->name($this->appNamespace, $this->apiRequestsNamespace, $className);
     }
 
-    protected function generateApiResource(ApiController $apiController, ApiMethod $apiMethod) {
-        $className = $apiController->name() . Str::ucfirst($apiMethod->name) . 'Resource';
-        $entity = $apiController->entity;
+    protected function generateView(Entity $entity, View $view): void {
+        $className = $entity->name . ($view->name == 'default' ? '' : Str::ucfirst($view->name)) . 'Resource';
 
         $this->generateClass($className, $this->apiResourcesNamespace,
-            function(ClassType $genClass, $namespace) use ($apiMethod, $entity) {
+            function(ClassType $genClass, $namespace) use ($view, $entity) {
                 $genClass->setExtends('Illuminate\Http\Resources\Json\JsonResource');
 
                 $genMethod = $genClass->addMethod('toArray');
@@ -282,7 +284,7 @@ class ModelGenerator extends AbstractModelGenerator
 
                 $body = "return [\n";
 
-                foreach ($apiMethod->fields as $name) {
+                foreach ($view->fields as $name) {
                     $body .= "\t'$name' => \$this->$name,\n";
                 }
 
@@ -291,7 +293,8 @@ class ModelGenerator extends AbstractModelGenerator
             }
         );
 
-        return $this->name($this->appNamespace, $this->apiResourcesNamespace, $className);
+        $className = $this->name($this->appNamespace, $this->apiResourcesNamespace, $className);
+        $this->views[$view->fullName] = $className;
     }
 
     protected function generateApiController(ApiController $apiController): string
@@ -329,8 +332,10 @@ class ModelGenerator extends AbstractModelGenerator
                         $param->setType('Illuminate\Http\Request');
                     }
 
-                    if (in_array($apiMethod->type, [ApiMethod::LIST, ApiMethod::GET]) && $apiMethod->fields) {
-                        $resourceClass = $this->generateApiResource($apiController, $apiMethod);
+                    if (in_array($apiMethod->type, [ApiMethod::LIST, ApiMethod::GET])) {
+                        if (!isset($this->views[$apiMethod->view->fullName]))
+                            $this->generateView($apiController->entity, $apiMethod->view);
+                        $resourceClass = $this->views[$apiMethod->view->fullName];
                     }
 
                     $entityRoute = '';
@@ -353,7 +358,7 @@ class ModelGenerator extends AbstractModelGenerator
                     switch ($apiMethod->type) {
                         case ApiMethod::LIST:
                             if ($apiMethod->relation) {
-                                $queryMethodName = 'get' . ucfirst($apiMethod->relation) . 'Query';
+                                $queryMethodName = 'get' . Str::studly($apiMethod->relation) . 'Query';
                                 $queryMethodBody = "return \${$entityParamName}->{$apiMethod->relation}();";
                                 $queryMethodParameters = "\$$entityParamName";
                             } else {
