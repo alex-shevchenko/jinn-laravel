@@ -332,7 +332,7 @@ class ModelGenerator extends AbstractModelGenerator
                         $param->setType('Illuminate\Http\Request');
                     }
 
-                    if (in_array($apiMethod->type, [ApiMethod::LIST, ApiMethod::GET])) {
+                    if (in_array($apiMethod->type, [ApiMethod::LIST, ApiMethod::GET, ApiMethod::UPDATE, ApiMethod::CREATE])) {
                         if (!isset($this->views[$apiMethod->view->fullName]))
                             $this->generateView($apiController->entity, $apiMethod->view);
                         $resourceClass = $this->views[$apiMethod->view->fullName];
@@ -382,12 +382,12 @@ class ModelGenerator extends AbstractModelGenerator
                             break;
                         case ApiMethod::CREATE:
                             $body .= "\${$entityParamName} = new \\$modelClass();\n\$this->fill(\${$entityParamName}, \$request->validated());\n";
-                            $body .= "\${$entityParamName}->save();\nreturn \${$entityParamName};";
+                            $body .= "\${$entityParamName}->save();\nreturn new \\$resourceClass(\${$entityParamName});";
                             $routeMethod = 'post';
                             break;
                         case ApiMethod::UPDATE:
                             $body .= "\$this->fill(\${$entityParamName}, \$request->validated());\n";
-                            $body .= "\${$entityParamName}->save();\nreturn \${$entityParamName};";
+                            $body .= "\${$entityParamName}->save();\nreturn new \\$resourceClass(\${$entityParamName});";
                             $routeMethod = 'put';
                             break;
                         case ApiMethod::DELETE:
