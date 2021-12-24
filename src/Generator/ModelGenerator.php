@@ -23,6 +23,10 @@ use InvalidArgumentException;
 
 class ModelGenerator extends AbstractModelGenerator
 {
+    const DB_TYPE_SQL = 'SQL';
+    const DB_TYPE_MONGO = 'Mongo';
+
+    private string $dbType;
     private string $appNamespace;
     private string $modelsNamespace;
     private string $policiesNamespace;
@@ -42,6 +46,8 @@ class ModelGenerator extends AbstractModelGenerator
     public function __construct(array $params, ?OutputStyle $output = null)
     {
         $this->classGenerator = new ClassGenerator($params['appNamespace'], $params['appFolder'], config('jinn.generated_namespace'), config('jinn.generated_folder'), [$this, 'writeLine']);
+
+        $this->dbType = config('jinn.db_type', self::DB_TYPE_SQL);
 
         $this->modelsNamespace = config('jinn.models_namespace');
         $this->policiesNamespace = config('jinn.policies_namespace');
@@ -72,7 +78,11 @@ class ModelGenerator extends AbstractModelGenerator
         $this->classGenerator->generateClass($entity->name, $this->modelsNamespace,
             function(ClassType $genClass) use($entity) {
 
-                $extends = ($entity->extends ?? 'Illuminate\Database\Eloquent\Model');
+                $extends = ($entity->extends ?? (
+                    $this->dbType == self::DB_TYPE_MONGO
+                        ? 'Jenssegers\Mongodb\Eloquent\Model' :
+                        'Illuminate\Database\Eloquent\Model'
+                    ));
 
                 $genClass->setExtends($extends);
                 foreach ($entity->implements as $implement) {
@@ -379,16 +389,18 @@ class ModelGenerator extends AbstractModelGenerator
      */
     protected function generateMigrations(array $entities): void
     {
-        $creator = new MigrationCreator();
+        if ($this->dbType == self::DB_TYPE_SQL) {
+            $creator = new MigrationCreator();
 
-        foreach ($entities as $entity) {
-            $filename = $creator->createStructureMigration($entity, $this->migrationsPath);
-            if ($filename) $this->writeLine("Generated migration <info>$filename</info>");
+            foreach ($entities as $entity) {
+                $filename = $creator->createStructureMigration($entity, $this->migrationsPath);
+                if ($filename) $this->writeLine("Generated migration <info>$filename</info>");
 
-        }
-        foreach ($entities as $entity) {
-            $filename = $creator->createForeignKeysMigration($entity, $this->migrationsPath);
-            if ($filename) $this->writeLine("Generated migration <info>$filename</info>");
+            }
+            foreach ($entities as $entity) {
+                $filename = $creator->createForeignKeysMigration($entity, $this->migrationsPath);
+                if ($filename) $this->writeLine("Generated migration <info>$filename</info>");
+            }
         }
     }
 }
