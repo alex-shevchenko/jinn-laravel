@@ -35,7 +35,6 @@ class JinnGenerateCommand extends Command
         $application = $reader->read($this->laravel->basePath() . '/' . config('jinn.definitions_folder'));
 
         $generatorParams = [
-            'baseFolder' => $this->laravel->basePath(),
             'appFolder' => $this->laravel['path'],
             'appNamespace' => substr($this->laravel->getNamespace(), 0, -1),
             'migrationsPath' => $migrationsPath
