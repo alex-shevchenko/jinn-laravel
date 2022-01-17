@@ -20,6 +20,8 @@ use Jinn\Definition\Models\Field;
 use Jinn\Definition\Models\Index;
 use Jinn\Definition\Models\Relation;
 use Jinn\Generator\PhpFileWriter;
+use Jinn\Laravel\Utils\NameConverter;
+use Jinn\Laravel\Utils\Types;
 use LogicException;
 use Nette\PhpGenerator\Dumper;
 use Nette\PhpGenerator\PhpFile;

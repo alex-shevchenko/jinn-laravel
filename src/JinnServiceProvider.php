@@ -3,7 +3,9 @@
 namespace Jinn\Laravel;
 
 use Illuminate\Support\ServiceProvider;
-use Jinn\Laravel\Generator\Migrator;
+use Jinn\Generator\GeneratorConfig as BaseGeneratorConfig;
+use Jinn\Laravel\Generator\GeneratorConfig;
+use Jinn\Laravel\Utils\Migrator;
 
 class JinnServiceProvider extends ServiceProvider
 {
@@ -26,6 +28,9 @@ class JinnServiceProvider extends ServiceProvider
             $repository = $app['migration.repository'];
 
             return new Migrator($repository, $app['db'], $app['files'], $app['events']);
+        });
+        $this->app->singleton(BaseGeneratorConfig::class, function($app) {
+            return new GeneratorConfig();
         });
     }
 }

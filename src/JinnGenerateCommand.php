@@ -5,8 +5,9 @@ namespace Jinn\Laravel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Composer;
 use Jinn\Definition\DefinitionReader;
-use Jinn\Laravel\Generator\Migrator;
-use Jinn\Laravel\Generator\ModelGenerator;
+use Jinn\Generator\GeneratorConfig;
+use Jinn\Laravel\Utils\Migrator;
+use Jinn\Laravel\Generator\EntityGenerator;
 
 class JinnGenerateCommand extends Command
 {
@@ -18,7 +19,7 @@ class JinnGenerateCommand extends Command
         parent::__construct();
     }
 
-    public function handle(Migrator $migrator, DefinitionReader $reader, Composer $composer)
+    public function handle(Migrator $migrator, DefinitionReader $reader, GeneratorConfig $config, EntityGenerator $generator, Composer $composer)
     {
         $migrationsPath = $this->laravel->databasePath() . '/migrations/';
 
@@ -39,8 +40,8 @@ class JinnGenerateCommand extends Command
             'appNamespace' => substr($this->laravel->getNamespace(), 0, -1),
             'migrationsPath' => $migrationsPath
         ];
-        $generator = new ModelGenerator($generatorParams, $this->getOutput());
 
+        $config->output = [$this, 'line'];
         $generator->generate($application);
 
         $this->line('<info>Jinn done</info>');

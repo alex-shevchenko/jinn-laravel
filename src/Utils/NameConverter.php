@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Jinn\Laravel\Generator;
+namespace Jinn\Laravel\Utils;
 
 
 use Illuminate\Support\Str;
@@ -26,6 +26,5 @@ class NameConverter implements NameConverterInterface
     public function toFieldName(string $columnName): string
     {
         return Str::snake($columnName);
-
     }
 }

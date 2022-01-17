@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Jinn\Laravel\Generator;
+namespace Jinn\Laravel\Utils;
 
 use Jinn\Definition\Types as BaseTypes;
 
@@ -18,6 +18,27 @@ class Types extends BaseTypes
                 return 'integer';
             case self::BIGINT:
                 return 'unsignedBigInteger';
+            case self::FLOAT:
+                return 'float';
+            case self::BOOL:
+                return 'boolean';
+            case self::DATE:
+                return 'date';
+            case self::DATETIME:
+                return 'dateTime';
+            default:
+                return null;
+        }
+    }
+
+    public static function toEloquentCast(string $type) {
+        switch ($type) {
+            case self::EMAIL:
+            case self::STRING:
+            case self::TEXT:
+                return 'string';
+            case self::INT:
+                return 'integer';
             case self::FLOAT:
                 return 'float';
             case self::BOOL:

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Jinn\Laravel\Generator;
+namespace Jinn\Laravel\Utils;
 
 
 use Illuminate\Database\Migrations\Migrator as BaseMigrator;
