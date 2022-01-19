@@ -19,8 +19,8 @@ trait HasEntity
         $param->setType($this->modelClass());
     }
 
-    public function policyParam(): ?string
+    public function hasEntity(): bool
     {
-        return '$' . $this->entityParamName();
+        return true;
     }
 }

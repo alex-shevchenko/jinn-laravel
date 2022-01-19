@@ -42,7 +42,8 @@ class ApiControllerGenerator extends ClassGenerator
             $methodGenerator->generate($genClass);
 
             if ($apiMethod->policy) {
-                $policies[$apiMethod->policy] = $methodGenerator->policyParam();
+                $apiMethod->policy->hasEntity = $methodGenerator->hasEntity();
+                $policies[] = $apiMethod->policy;
             }
 
             if ($apiMethod->route !== false) {

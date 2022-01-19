@@ -18,16 +18,16 @@ class ApiPolicyGenerator extends ClassGenerator
     {
         $dumper = new Dumper();
 
-        foreach ($policies as $policy => $param) {
+        foreach ($policies as $policy) {
             $method = $genClass->addMethod($policy->name);
             $method->addParameter('user');
-            if ($param)
-                $method->addParameter($param);
+            if ($policy->hasEntity)
+                $method->addParameter('entity');
 
             $body = '';
             if ($policy->owner) {
-                if (!$param) throw new LogicException("Method $policy cannot have owner policy as it has no entity");
-                $body .= "if (\${$param}->{$policy->owner} == \$user) return true;\n";
+                if (!$policy->hasEntity) throw new LogicException("Method $policy cannot have owner policy as it has no entity");
+                $body .= "if (\$user->is(\$entity->{$policy->owner})) return true;\n";
             }
             if ($policy->roles) {
                 $body .= "if (in_array(\$user->role, " . $dumper->dump($policy->roles) . ")) return true;\n";
