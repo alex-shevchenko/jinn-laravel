@@ -46,7 +46,7 @@ class Types extends BaseTypes
             case self::DATE:
                 return 'date';
             case self::DATETIME:
-                return 'dateTime';
+                return 'datetime';
             default:
                 return null;
         }
