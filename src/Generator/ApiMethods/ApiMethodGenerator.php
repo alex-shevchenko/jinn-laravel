@@ -65,7 +65,7 @@ abstract class ApiMethodGenerator
     {
     }
 
-    public function policyParam(): string
+    public function policyParam(): ?string
     {
         return null;
     }

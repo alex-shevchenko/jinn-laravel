@@ -19,7 +19,7 @@ trait HasEntity
         $param->setType($this->modelClass());
     }
 
-    public function policyParam(): string
+    public function policyParam(): ?string
     {
         return '$' . $this->entityParamName();
     }
