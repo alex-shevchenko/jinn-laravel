@@ -8,11 +8,6 @@ trait HasEntity
 {
     use ApiMethodGeneratorTrait;
 
-    protected function entityParamName(): string
-    {
-        return lcfirst($this->entityName());
-    }
-
     protected function entityRoute(): string
     {
         return '/{' . lcfirst($this->entityName()) . '}';
@@ -24,7 +19,7 @@ trait HasEntity
         $param->setType($this->modelClass());
     }
 
-    protected function policyParam(): string
+    public function policyParam(): string
     {
         return '$' . $this->entityParamName();
     }

@@ -65,14 +65,14 @@ abstract class ApiMethodGenerator
     {
     }
 
-    protected function policyParam(): string
+    public function policyParam(): string
     {
-        return '\\' . $this->modelClass() . '::class';
+        return null;
     }
 
     private function addPolicy(Method $method): void
     {
-        $method->addBody("\$this->authorize('{$this->method->name}', {$this->policyParam()});\n");
+        $method->addBody("\$this->authorize('{$this->method->name}', " . ($this->policyParam() ?? "\\' . $this->modelClass() . '::class") . ");\n");
     }
 
     abstract protected function addLogic(ClassType $genClass, Method $method): void;

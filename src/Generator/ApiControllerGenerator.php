@@ -42,23 +42,8 @@ class ApiControllerGenerator extends ClassGenerator
             $methodGenerator->generate($genClass);
 
             if ($apiMethod->policy) {
-                $policies[] = $apiMethod->policy;
+                $policies[$apiMethod->policy] = $methodGenerator->policyParam();
             }
-
-//            switch ($apiMethod->type) {
-//                case ApiMethod::LIST:
-//                    if ($apiMethod->relation) {
-//                        $queryMethodName = 'get' . Str::studly($apiMethod->relation) . 'Query';
-//                        $queryMethodBody = "return \${$entityParamName}->{$apiMethod->relation}();";
-//                        $queryMethodParameters = "\$$entityParamName";
-//                    } else {
-//                    }
-//                    if ($apiMethod->relation) {
-//                        $queryMethod->addParameter($entityParamName);
-//                    }
-//
-//                    break;
-//            }
 
             if ($apiMethod->route !== false) {
                 $routes .= "\tRoute::{$methodGenerator->routeMethod()}('{$methodGenerator->route()}', [\\$classFullName::class, '{$apiMethod->name}'])";
@@ -68,6 +53,7 @@ class ApiControllerGenerator extends ClassGenerator
             }
         }
 
+        if ($policies)
         $this->generatePolicy($apiController->entity, $policies);
 
         return $routes;
