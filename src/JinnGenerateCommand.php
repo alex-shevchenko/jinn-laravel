@@ -33,7 +33,7 @@ class JinnGenerateCommand extends Command
 
         $this->line('<comment>Generating</comment>');
 
-        $application = $reader->read($this->laravel->basePath() . '/' . config('jinn.definitions_folder'));
+        $application = $reader->read($this->laravel->basePath() . '/' . config('jinn.definitions_folder', 'jinn/def'));
 
         $generatorParams = [
             'appFolder' => $this->laravel['path'],
