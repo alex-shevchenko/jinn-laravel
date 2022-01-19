@@ -12,7 +12,7 @@ class RelatedListMethodGenerator extends ListMethodGenerator
 
     protected function addQueryMethod(ClassType $genClass, $queryMethodName): void
     {
-        $this->addUtilityMethod($genClass, $queryMethodName, [$this->entityParamName() => $this->modelClass()], "\${$this->entityParamName()}->{$this->method()->relation}();\n");
+        $this->addUtilityMethod($genClass, $queryMethodName, [$this->entityParamName() => $this->modelClass()], "return \${$this->entityParamName()}->{$this->method()->relation}();\n");
     }
 
     protected function queryMethodParams(): string
