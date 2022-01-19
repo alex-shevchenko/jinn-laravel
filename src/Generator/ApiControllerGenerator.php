@@ -19,10 +19,10 @@ class ApiControllerGenerator extends ClassGenerator
         return $apiController->name() . 'Controller';
     }
 
-    protected function generatePolicy(Entity $entity, array $policies): void
+    protected function generatePolicy(ApiController $controller): void
     {
         $generator = $this->factory->get(self::API_POLICY);
-        $generator->generate($entity, $policies);
+        $generator->generate($controller);
     }
 
     protected function generateBaseClass(ClassType $genClass, $classFullName, $apiController, $param = null)
@@ -34,17 +34,15 @@ class ApiControllerGenerator extends ClassGenerator
         $entityName = $apiController->name();
         $modelClass = $this->modelClass($entityName);
 
-
         $genClass->setExtends($this->config->baseControllerClass);
+
+        $hasPolicies = false;
 
         foreach ($apiController->methods() as $apiMethod) {
             $methodGenerator = ApiMethodGenerator::get($apiMethod, $apiController, $modelClass, $this->factory);
             $methodGenerator->generate($genClass);
 
-            if ($apiMethod->policy) {
-                $apiMethod->policy->hasEntity = $methodGenerator->hasEntity();
-                $policies[] = $apiMethod->policy;
-            }
+            if ($apiMethod->policy) $hasPolicies = true;
 
             if ($apiMethod->route !== false) {
                 $routes .= "\tRoute::{$methodGenerator->routeMethod()}('{$methodGenerator->route()}', [\\$classFullName::class, '{$apiMethod->name}'])";
@@ -54,8 +52,8 @@ class ApiControllerGenerator extends ClassGenerator
             }
         }
 
-        if ($policies)
-        $this->generatePolicy($apiController->entity, $policies);
+        if ($hasPolicies)
+            $this->generatePolicy($apiController);
 
         return $routes;
     }

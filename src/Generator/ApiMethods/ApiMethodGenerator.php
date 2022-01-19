@@ -72,7 +72,8 @@ abstract class ApiMethodGenerator
 
     private function addPolicy(Method $method): void
     {
-        $method->addBody("\$this->authorize('{$this->method->name}', " . ($this->hasEntity() ? '$' . $this->entityParamName() : "\\' . $this->modelClass() . '::class") . ");\n");
+        if ($this->method()->policy)
+            $method->addBody("\$this->authorize('{$this->method->name}', " . ($this->hasEntity() ? '$' . $this->entityParamName() : "\\{$this->modelClass()}::class") . ");\n");
     }
 
     abstract protected function addLogic(ClassType $genClass, Method $method): void;
