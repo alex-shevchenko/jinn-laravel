@@ -1,7 +1,12 @@
-#Setup
-##1. Publish Jinn config file
-`php artisan vendor:publish --provider="Jinn\Laravel\JinnServiceProvider"`
-##2. Create Jinn folder structure
+#Why Jinn
+#Key Concepts
+#Getting Started
+#Installation
+##Setup via composer
+    composer require jinn/jinn-laravel@dev-master
+##Publish Jinn config file
+    php artisan vendor:publish --provider="Jinn\Laravel\JinnServiceProvider"
+##Create Jinn folder structure
 Default structure:  
 ```
 jinn 
@@ -11,7 +16,7 @@ jinn
 Alternative structure can be configured via `config/jinn.php`.
 Further guide will use default configuration. Changing Jinn configuration 
 should result in corresponding changes to the next steps.
-##3. Configure autoload
+##Configure autoload
 Edit `composer.json`, locate autoload section and add a line as follows:
 ```
 "autoload": {
@@ -21,11 +26,10 @@ Edit `composer.json`, locate autoload section and add a line as follows:
     }
 }
 ```
-##5. Create definitions
-Create one or more yaml files under `jinn/def` and define your entities.
-##6. Ask Jinn to generate the code
-`php artisan jinn`
-##7. __(Optional)__ Enable Jinn API routing
+Ask composer to update autoload file:
+
+    composer dump-autoload
+##__(Optional)__ Enable Jinn API routing
 In case if your definition includes APIs, when first executed 
 Jinn will generate API routing file under `jinn/gen/routes/api.php`.
 The file must be required from the main `routes/api.php` as follows
@@ -37,3 +41,19 @@ Here you may add any middleware to the group as follows
 ```php
 Route::middleware(['first', 'second'])->group($jinn);
 ```
+#Basic Usage
+##Definitions
+Jinn reads all files from it's definitions directory. 
+It is expected that all of them valid YAML files.
+
+For small projects it is reasonable to use a single file for all definitions. 
+You can name it `entities.yaml`, for example. 
+
+For larger projects there are several strategies available for using multiple files.
+It is covered later in this documentation.
+##Basic Definition
+```yaml
+
+``` 
+##Ask Jinn to generate the code
+`php artisan jinn`

@@ -29,7 +29,6 @@ class ApiPolicyGenerator extends ClassGenerator
 
                 $body = '';
                 if ($policy->owner) {
-                    if (!$policy->hasEntity) throw new LogicException("Method $policy cannot have owner policy as it has no entity");
                     $body .= "if (\$user->is(\$entity->{$policy->owner})) return true;\n";
                 }
                 if ($policy->roles) {
