@@ -24,7 +24,7 @@ class ApiPolicyGenerator extends ClassGenerator
         foreach ($controller->methods() as $apiMethod) {
             if ($policy = $apiMethod->policy) {
                 $method = $genClass->addMethod($policy->name);
-                $method->addParameter('user')->setType($policy->anonymous ? '?object' : null);
+                $method->addParameter('user')->setType(!$apiMethod->auth ? '?object' : null);
                 $method->addParameter('entity')->setDefaultValue(null);
 
                 $body = '';

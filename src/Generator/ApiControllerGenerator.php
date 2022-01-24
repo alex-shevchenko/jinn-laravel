@@ -46,7 +46,7 @@ class ApiControllerGenerator extends ClassGenerator
 
             if ($apiMethod->route !== false) {
                 $routes .= "\tRoute::{$methodGenerator->routeMethod()}('{$methodGenerator->route()}', [\\$classFullName::class, '{$apiMethod->name}'])";
-                if ($apiMethod->authRequired)
+                if ($apiMethod->auth)
                     $routes .= "->middleware('{$this->config->authMiddleware}')";
                 $routes .= ";\n";
             }
