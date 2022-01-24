@@ -11,8 +11,8 @@ use Jinn\Laravel\Generator\EntityGenerator;
 
 class JinnGenerateCommand extends Command
 {
-    protected $signature = 'jinn';
-    protected $description = 'Ask Jinn to (re)generate everything';
+    protected $signature = 'jinn {--no-auto-migrate : Do not execute migrations} {--no-migrations : Do not generate and execute migrations}';
+    protected $description = 'Ask Jinn to generate everything';
 
     public function __construct()
     {
@@ -24,11 +24,17 @@ class JinnGenerateCommand extends Command
         $migrationsPath = $this->laravel->databasePath() . '/migrations/';
 
         $this->line('<info>Jinn started</info>');
-        $this->line('<comment>Checking migrations</comment>');
-        if ($migrator->hasPendingMigrations($migrationsPath)) {
-            $this->error('Pending migrations detected. Invalid migrations may be generated, aborting.');
-            $this->line('Run <info>php artisan migrate</info> first');
-            return;
+
+        $generateMigrations = !$this->option('no-migrations');
+        $autoMigrate = $generateMigrations && !$this->option('no-auto-migrate');
+
+        if ($autoMigrate) {
+            $this->line('<comment>Checking migrations</comment>');
+            if ($migrator->hasPendingMigrations($migrationsPath)) {
+                $this->error('Pending migrations detected. Invalid migrations may be generated, aborting.');
+                $this->line('Run <info>php artisan migrate</info> first');
+                return;
+            }
         }
 
         $this->line('<comment>Generating</comment>');
@@ -42,12 +48,15 @@ class JinnGenerateCommand extends Command
         ];
 
         $config->output = [$this, 'line'];
-        $generator->generate($application);
+        $generator->generate($application, $generateMigrations);
 
         $this->line('<info>Jinn done</info>');
-        $this->line('<info>Executing migrations</info>');
 
-        $this->call('migrate');
+        if ($autoMigrate) {
+            $this->line('<info>Executing migrations</info>');
+
+            $this->call('migrate');
+        }
 
         $composer->dumpAutoloads();
     }
