@@ -22,18 +22,18 @@ class GeneratorConfig extends BaseGeneratorConfig
     {
         $this->appNamespace = substr(app()->getNamespace(), 0, -1);
         $this->appFolder = app()['path'];
-        $this->generatedNamespace = config('jinn.generated_namespace', 'JinnGenerated');
-        $this->generatedFolder = config('jinn.generated_folder', 'jinn/gen');
+        $this->generatedNamespace = config('jinn.generated_namespace');
+        $this->generatedFolder = config('jinn.generated_folder');
 
-        $this->modelNamespace = config('jinn.models_namespace', 'Models');
-        $this->viewNamespace = config('jinn.views_namespace', 'Http\Resources\Api');
-        $this->apiControllerNamespace = config('jinn.api_controllers_namespace', 'Http\Controllers\Api');
-        $this->apiPolicyNamespace = config('jinn.policies_namespace', 'Policies');
-        $this->apiRequestNamespace = config('jinn.api_requests_namespace', 'Http\Requests\Api');
+        $this->modelNamespace = config('jinn.models_namespace');
+        $this->viewNamespace = config('jinn.views_namespace');
+        $this->apiControllerNamespace = config('jinn.api_controllers_namespace');
+        $this->apiPolicyNamespace = config('jinn.policies_namespace');
+        $this->apiRequestNamespace = config('jinn.api_requests_namespace');
 
-        $this->baseControllerClass = config('jinn.base_controller_class', 'App\Http\Controllers\Controller');
+        $this->baseControllerClass = config('jinn.base_controller_class');
 
-        $this->authMiddleware = config('jinn.auth_middleware', 'auth');
+        $this->authMiddleware = config('jinn.auth_middleware');
 
         $this->migrationsPath = app()->databasePath() . '/migrations/';
     }

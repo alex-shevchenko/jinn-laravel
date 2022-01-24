@@ -24,6 +24,10 @@ class JinnServiceProvider extends ServiceProvider
 
     public function register()
     {
+        if (!app()->configurationIsCached()) {
+            $this->mergeConfigFrom(__DIR__.'/../config/jinn.php', 'jinn');
+        }
+
         $this->app->singleton(Migrator::class, function($app) {
             $repository = $app['migration.repository'];
 
