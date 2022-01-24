@@ -58,7 +58,7 @@ class ModelGenerator extends ClassGenerator
 
             $code = 'return $this->';
             $comment = "@return \\";
-            $field = $relation->field ? Str::snake($relation->field) : null;
+            $property = $relation->via ? Str::snake($relation->via) : null;
             switch ($relation->type) {
                 case Relation::ONE_TO_MANY:
                     $code .= "hasMany(";
@@ -75,7 +75,7 @@ class ModelGenerator extends ClassGenerator
             }
             $relationClass = $this->modelClass($relation->entityName);
             $code .= "\\" . $relationClass . '::class';
-            if ($field) $code .= ", '$field'";
+            if ($property) $code .= ", '$property'";
             $code .= ');';
             $method->setBody($code);
             $method->addComment($comment);
