@@ -13,11 +13,6 @@ class GeneratorConfig extends BaseGeneratorConfig
     public $apiPolicyNamespace;
     public $apiRequestNamespace;
 
-    /**
-     * @var callable
-     */
-    public $output;
-
     public function __construct()
     {
         $this->appNamespace = substr(app()->getNamespace(), 0, -1);
