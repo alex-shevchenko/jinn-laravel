@@ -1,6 +1,9 @@
 {
-    "name": "jinn/jinn-laravel",
+    "name": "jinn/laravel",
     "type": "library",
+    "description": "Jinn for Laravel. Models, Migrations and API generator.",
+    "keywords": ["jinn", "generator"],
+    "homepage": "https://jinncode.dev/",
     "license": "MIT",
     "authors": [
         {
@@ -28,9 +31,9 @@
     },
     "minimum-stability": "dev",
     "require": {
-        "php" : "^7.4|8.0",
+        "php" : ">=7.4",
         "laravel/framework": "^8.54",
-        "jinn/jinn-core": "dev-master",
-        "nette/php-generator": "v3.6.x-dev"
+        "jinn/core": "dev-master",
+        "nette/php-generator": "^3.6"
     }
 }
