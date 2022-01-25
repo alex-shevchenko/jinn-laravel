@@ -11,12 +11,6 @@
             "email": "caezaris@gmail.com"
         }
     ],
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../jinn-core"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Jinn\\Laravel\\": "src/"
@@ -33,7 +27,7 @@
     "require": {
         "php" : ">=7.4",
         "laravel/framework": "^8.54",
-        "jinn/core": "dev-master",
+        "jinn/core": "^0.1",
         "nette/php-generator": "^3.6"
     }
 }
