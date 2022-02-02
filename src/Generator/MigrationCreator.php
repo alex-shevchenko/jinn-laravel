@@ -335,6 +335,6 @@ class MigrationCreator extends BaseMigrationCreator
 
     protected function getDatePrefix()
     {
-        return parent::getDatePrefix() . gettimeofday()['usec'];
+        return parent::getDatePrefix() . str_pad(gettimeofday()['usec'], 6, '0');
     }
 }
