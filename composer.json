@@ -27,7 +27,7 @@
     "require": {
         "php" : ">=7.4",
         "laravel/framework": "^8.54",
-        "jinn/core": "^0.1",
+        "jinn/core": "^0.2",
         "nette/php-generator": "^3.6"
     }
 }
