@@ -128,6 +128,7 @@ Inspect generated files under `app` and `jinn/gen` folders.
 - [X] Models:
     - [ ] More field types?
     - [ ] Different types for `id`
+    - [ ] Allow making a required (non-nullable) many-to-one relation 
 - [X] APIs:
     - [ ] Related controller
     - [ ] Additional methods: associated/disassociate, other?
