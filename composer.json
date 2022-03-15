@@ -26,7 +26,7 @@
     "minimum-stability": "dev",
     "require": {
         "php" : ">=7.4",
-        "laravel/framework": "^8.54",
+        "laravel/framework": "^8.54|^9.0",
         "jinn/core": "^0.2",
         "nette/php-generator": "^3.6"
     }
