@@ -76,7 +76,15 @@ class ModelGenerator extends ClassGenerator
             $relationClass = $this->modelClass($relation->entityName);
             $code .= "\\" . $relationClass . '::class';
             if ($property) $code .= ", '$property'";
-            $code .= ');';
+            $code .= ')';
+
+            if ($relation->type == Relation::MANY_TO_MANY && $relation->via) {
+                $viaClass = $this->modelClass($relation->via);
+                $code .= "->using(\\{$viaClass}::class)";
+            }
+
+            $code .= ';';
+
             $method->setBody($code);
             $method->addComment($comment);
 
@@ -87,7 +95,12 @@ class ModelGenerator extends ClassGenerator
     protected function generateBaseClass(ClassType $genClass, $classFullName, $entity, $param = null)
     {
         /** @var Entity $entity */
-        $extends = ($entity->extends ?? 'Illuminate\Database\Eloquent\Model');
+        $extends = ($entity->extends ?? (
+            $entity->isPivot ?
+                'Illuminate\Database\Eloquent\Relations\Pivot' :
+                'Illuminate\Database\Eloquent\Model'
+            )
+        );
 
         $genClass->setExtends($extends);
         foreach ($entity->implements as $implement) {
@@ -102,6 +115,11 @@ class ModelGenerator extends ClassGenerator
 
         $primaryKeyProperty = $genClass->addProperty('primaryKey', 'id');
         $primaryKeyProperty->setProtected();
+
+        if ($entity->isPivot) {
+            $tableProperty = $genClass->addProperty('table', Str::snake($entity->name));
+            $tableProperty->setProtected();
+        }
 
         $this->handleFields($genClass, $entity->fields());
         $this->handleRelations($genClass, $entity->relations());
