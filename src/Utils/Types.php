@@ -3,6 +3,7 @@
 
 namespace Jinn\Laravel\Utils;
 
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Jinn\Definition\Types as BaseTypes;
 
 class Types extends BaseTypes
@@ -26,6 +27,8 @@ class Types extends BaseTypes
                 return 'date';
             case self::DATETIME:
                 return 'dateTime';
+            case self::JSON:
+                return 'json';
             default:
                 return null;
         }
@@ -47,6 +50,8 @@ class Types extends BaseTypes
                 return 'date';
             case self::DATETIME:
                 return 'datetime';
+            case self::JSON:
+                return AsArrayObject::class;
             default:
                 return null;
         }
@@ -67,6 +72,7 @@ class Types extends BaseTypes
             case self::STRING:
             case self::TEXT:
             case self::BOOL:
+            case self::JSON:
             default:
                 return null;
         }
