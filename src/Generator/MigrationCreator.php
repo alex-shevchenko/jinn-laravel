@@ -55,6 +55,7 @@ class MigrationCreator extends BaseMigrationCreator
         if (!empty($connectionParams['url'])) $connectionParams['url'] = 'pdo_' . $connectionParams['url'];
         if (!empty($connectionParams['username'])) $connectionParams['user'] = $connectionParams['username'];
         if (!empty($connectionParams['database'])) $connectionParams['dbname'] = $connectionParams['database'];
+        if (!empty($connectionParams['options'])) $connectionParams['driverOptions'] = $connectionParams['options'];
 
         return $connectionParams;
     }
