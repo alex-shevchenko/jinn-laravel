@@ -34,6 +34,6 @@
         "php" : ">=7.4",
         "laravel/framework": "^8.54|^9.0|^10.0",
         "jinn/core": "dev-master",
-        "nette/php-generator": "^3.6"
+        "nette/php-generator": "^3.6|^4.0"
     }
 }
